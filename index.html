@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Race Pace Calculator Pro | GPX + Elevation</title>
-    <!-- Chart.js untuk grafik elevasi -->
+    <title>Race Pace Calculator | GPX + Elevation</title>
+    <!-- Chart.js for elevation profile -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- leaflet (optional untuk peta, tidak wajib) tapi kita tidak pakai peta, cukup chart -->
     <style>
         * {
             box-sizing: border-box;
@@ -21,14 +20,12 @@
             max-width: 1400px;
             margin: 0 auto;
         }
-        /* card utama */
         .card {
             background: rgba(255,255,255,0.97);
             border-radius: 2rem;
             box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
             overflow: hidden;
             backdrop-filter: blur(0px);
-            transition: all 0.2s;
         }
         .card-header {
             padding: 1.5rem 2rem 0.5rem 2rem;
@@ -246,14 +243,14 @@
 <div class="app-container">
     <div class="card">
         <div class="card-header">
-            <h1>🏁 Race Pace Pro + GPX Elevation</h1>
-            <p>Slider pace interaktif · split per km · prediksi lomba · import GPX (jarak riil & profil elevasi)</p>
+            <h1>🏁 Race Pace Calculator</h1>
+            <p>Interactive pace slider · per‑km splits · race predictions · import GPX (real distance & elevation profile)</p>
         </div>
         <div class="flex-row">
-            <!-- KIRI: kontrol -->
+            <!-- LEFT: controls -->
             <div class="panel-left">
                 <div class="input-group">
-                    <label>📏 Jarak lomba (km)</label>
+                    <label>📏 Race distance (km)</label>
                     <div style="display: flex; gap: 8px;">
                         <select id="distPreset" style="flex:2">
                             <option value="5">5K</option>
@@ -265,58 +262,58 @@
                         <input type="number" id="customDist" step="0.001" value="5.0" style="flex:1" placeholder="km">
                     </div>
                     <div class="elev-info" id="gpxStatusMsg">
-                        📁 Belum ada file GPX. Upload untuk dapatkan jarak aktual + elevasi.
+                        📁 No GPX file loaded. Upload a GPX to get actual distance + elevation gain.
                     </div>
                 </div>
 
                 <div class="input-group">
-                    <label>⏱️ Target pace (menit:detik/km)</label>
+                    <label>⏱️ Target pace (min:sec per km)</label>
                     <div class="slider-wrapper">
                         <input type="range" id="paceSlider" min="180" max="600" step="1" value="270">
                     </div>
                     <div style="display: flex; justify-content: space-between;">
                         <div class="pace-badge" id="paceLabel">4:30</div>
-                        <div style="font-size:0.7rem;">↔️ geser</div>
+                        <div style="font-size:0.7rem;">↔️ drag slider</div>
                     </div>
                     <div class="total-time-box">
-                        <div>⏱️ Estimasi total waktu (datar)</div>
+                        <div>⏱️ Estimated total time (flat)</div>
                         <span id="totalTimePlain">--:--:--</span>
                     </div>
-                    <div class="checkbox-label" id="elevCheckWrapper" style="display: flex;">
+                    <div class="checkbox-label" id="elevCheckWrapper">
                         <input type="checkbox" id="useElevationAdjust">
-                        <label style="margin:0; text-transform: none;">⛰️ Sesuaikan dengan elevasi (gain) → perkiraan waktu lebih akurat</label>
+                        <label style="margin:0; text-transform: none;">⛰️ Adjust for elevation gain → more realistic time</label>
                     </div>
                     <div id="elevAdjustedTime" style="background:#eef2ff; border-radius:1rem; padding:8px; margin-top: 8px; font-size:0.8rem; text-align:center; display: none;">
-                        🧗‍♂️ Dengan elevasi: <strong id="adjTimeSpan">--:--:--</strong>
+                        🧗‍♂️ With elevation: <strong id="adjTimeSpan">--:--:--</strong>
                     </div>
                 </div>
 
                 <div class="gpx-zone" id="gpxDropZone">
-                    📂 Drag & drop atau klik untuk upload file GPX<br>
-                    <small style="color:#2c6e9e;">(.gpx dari Strava, Garmin, dll)</small>
+                    📂 Drag & drop or click to upload GPX file<br>
+                    <small style="color:#2c6e9e;">(.gpx from Strava, Garmin, etc.)</small>
                     <input type="file" id="gpxFileInput" accept=".gpx" style="display:none;">
                     <div id="gpxFilename" class="file-name"></div>
                 </div>
             </div>
 
-            <!-- KANAN: tabel split + prediksi -->
+            <!-- RIGHT: splits + predictions + elevation chart -->
             <div class="panel-right">
-                <div style="font-weight: 700; margin-bottom: 6px;">📋 Split per kilometer (pace konstan)</div>
+                <div style="font-weight: 700; margin-bottom: 6px;">📋 Per‑kilometer splits (constant pace)</div>
                 <div class="split-table-container">
                     <table id="splitTable">
-                        <thead><tr><th>KM</th><th>Waktu kumulatif</th><th>Pace/km</th></tr></thead>
-                        <tbody id="splitBody"><tr><td colspan="3">Pilih jarak & pace</td></tr></tbody>
+                        <thead><tr><th>KM</th><th>Cumulative time</th><th>Pace/km</th></tr></thead>
+                        <tbody id="splitBody"><tr><td colspan="3">Select distance & pace</td></tr></tbody>
                     </table>
                 </div>
 
                 <div style="margin-top: 18px;">
-                    <div style="font-weight: 700;">🏅 Prediksi kategori lari (pace datar)</div>
+                    <div style="font-weight: 700;">🏅 Race predictions (flat pace)</div>
                     <div class="pred-grid" id="predictionGrid"></div>
                 </div>
 
-                <!-- Grafik elevasi -->
+                <!-- Elevation chart -->
                 <div class="chart-container">
-                    <div style="font-size:0.75rem; font-weight:600;">📈 Profil elevasi (jika ada GPX)</div>
+                    <div style="font-size:0.75rem; font-weight:600;">📈 Elevation profile (GPX required)</div>
                     <canvas id="elevChart" width="400" height="160" style="max-height: 180px; width: 100%;"></canvas>
                 </div>
             </div>
@@ -327,8 +324,8 @@
 <script>
     // ------------------- STATE --------------------
     let currentDistance = 5.0;          // km
-    let currentPaceSec = 270;            // detik per km
-    let gpxData = null;                  // simpan { distanceKm, totalGainM, points[{dist, elev}] }
+    let currentPaceSec = 270;            // seconds per km
+    let gpxData = null;                  // { distanceKm, totalGainM, points[{distM, elev}] }
     let elevChartInstance = null;
 
     // DOM elements
@@ -347,7 +344,7 @@
     const gpxFileInput = document.getElementById('gpxFileInput');
     const gpxFilenameDiv = document.getElementById('gpxFilename');
 
-    // Helper format
+    // Helper functions
     function secToHMS(sec) {
         if (isNaN(sec) || sec < 0) return "0:00:00";
         let h = Math.floor(sec / 3600);
@@ -355,26 +352,22 @@
         let s = Math.floor(sec % 60);
         return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
     }
+
     function secToPace(sec) {
         let m = Math.floor(sec / 60);
         let s = Math.floor(sec % 60);
         return `${m}:${s.toString().padStart(2,'0')}`;
     }
-    function paceStrToSec(str) { // "mm:ss"
-        let [mm, ss] = str.split(':');
-        return parseInt(mm)*60 + parseInt(ss);
-    }
 
-    // Hitung total waktu dengan faktor elevasi (gain meter -> persen tambahan)
-    // Aturan: setiap +100m gain -> +0.4% waktu (umumnya 0.4-0.6%, kita ambil 0.5% untuk dramatis)
-    function calculateTimeWithElevation(baseSec, totalGainMeters) {
+    // Elevation adjustment: every +100m gain adds 0.5% to total time
+    function adjustTimeForElevation(baseSec, totalGainMeters) {
         if (!totalGainMeters || totalGainMeters <= 0) return baseSec;
-        let extraPercent = (totalGainMeters / 100) * 0.5;  // 0.5% per 100m
+        let extraPercent = (totalGainMeters / 100) * 0.5;
         let factor = 1 + (extraPercent / 100);
         return baseSec * factor;
     }
 
-    // Render semuanya: split tabel, prediksi, total waktu, dan jika ada elevasi tampilkan penyesuaian
+    // Render everything: splits, predictions, total times, elevation adjustment
     function renderAll() {
         let distance = currentDistance;
         if (distance <= 0) distance = 0.001;
@@ -382,7 +375,7 @@
         let totalSecFlat = distance * paceSec;
         totalTimePlainSpan.innerText = secToHMS(totalSecFlat);
 
-        // Build split per KM
+        // Build split table
         let rows = '';
         let fullKm = Math.floor(distance);
         for (let i = 1; i <= fullKm; i++) {
@@ -394,42 +387,39 @@
             let finishSec = distance * paceSec;
             rows += `<tr style="background:#eef2ff;"><td>🏁 Finish (${distance.toFixed(3)} km)</td><td>${secToHMS(finishSec)}</td><td>${secToPace(paceSec)}</td></tr>`;
         }
-        if (rows === '') rows = '<tr><td colspan="3">Masukkan jarak valid</td></tr>';
+        if (rows === '') rows = '<tr><td colspan="3">Enter a valid distance</td></tr>';
         splitBody.innerHTML = rows;
 
-        // Prediksi 5K,10K,HM,FM
-        const cats = [
-            { name:"5K", d:5 },
-            { name:"10K", d:10 },
-            { name:"Half Marathon", d:21.0975 },
-            { name:"Full Marathon", d:42.195 }
+        // Race predictions (5K,10K,HM,FM)
+        const categories = [
+            { name:"5K", dist:5 },
+            { name:"10K", dist:10 },
+            { name:"Half Marathon", dist:21.0975 },
+            { name:"Full Marathon", dist:42.195 }
         ];
         let predHtml = '';
-        for(let c of cats) {
-            let tSec = c.d * paceSec;
+        for (let c of categories) {
+            let tSec = c.dist * paceSec;
             predHtml += `<div class="pred-card"><div class="pred-label">${c.name}</div><div class="pred-time">${secToHMS(tSec)}</div><div class="pred-label">@${secToPace(paceSec)}/km</div></div>`;
         }
         predictionGrid.innerHTML = predHtml;
 
-        // handle elevasi adjustment jika ada GPX
+        // Elevation adjustment if GPX loaded and checkbox checked
         if (gpxData && gpxData.totalGainM > 0 && useElevCheck.checked) {
-            let adjustedSec = calculateTimeWithElevation(totalSecFlat, gpxData.totalGainM);
+            let adjustedSec = adjustTimeForElevation(totalSecFlat, gpxData.totalGainM);
             elevAdjustedDiv.style.display = 'block';
             adjTimeSpan.innerText = secToHMS(adjustedSec);
-            // juga bisa tampilkan perbedaan waktu
         } else {
             elevAdjustedDiv.style.display = 'none';
         }
     }
 
-    // Update pace dari slider
     function updatePaceFromSlider() {
         currentPaceSec = parseInt(paceSlider.value, 10);
         paceLabel.innerText = secToPace(currentPaceSec);
         renderAll();
     }
 
-    // Update jarak dari UI
     function updateDistance() {
         let preset = distPreset.value;
         if (preset === 'custom') {
@@ -443,13 +433,13 @@
         renderAll();
     }
 
-    // ---------- GPX PARSING (jarak & elevasi) ----------
+    // ---------- GPX Parsing (distance & elevation gain) ----------
     function parseGPX(xmlText, fileName) {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, "text/xml");
         const trackPoints = xmlDoc.getElementsByTagName("trkpt");
         if (trackPoints.length === 0) {
-            gpxStatusMsg.innerHTML = "⚠️ GPX tidak memiliki track points. Coba file lain.";
+            gpxStatusMsg.innerHTML = "⚠️ GPX has no track points. Try another file.";
             return false;
         }
         let points = [];
@@ -463,10 +453,11 @@
             }
         }
         if (points.length < 2) {
-            gpxStatusMsg.innerHTML = "❌ Titik kurang dari 2, tidak bisa hitung jarak.";
+            gpxStatusMsg.innerHTML = "❌ Less than 2 points – cannot calculate distance.";
             return false;
         }
-        // hitung jarak akumulasi (meter) & total gain
+
+        // Calculate cumulative distance and total elevation gain
         let totalDistM = 0;
         let totalGain = 0;
         let enriched = [];
@@ -487,19 +478,19 @@
             if (elevDiff > 0) totalGain += elevDiff;
             enriched.push({ distM: totalDistM, elev: p2.elev });
         }
+
         const distanceKm = totalDistM / 1000;
-        // update state
         gpxData = {
             distanceKm: distanceKm,
             totalGainM: totalGain,
             points: enriched
         };
-        // override jarak dengan jarak dari GPX (opsi otomatis)
+
+        // Override race distance with actual GPX distance
         currentDistance = distanceKm;
-        // update UI jarak
         distPreset.value = 'custom';
         customDist.value = distanceKm.toFixed(3);
-        gpxStatusMsg.innerHTML = `✅ GPX: ${distanceKm.toFixed(2)} km, Elevasi gain ${totalGain.toFixed(0)} m. Jarak otomatis terganti.`;
+        gpxStatusMsg.innerHTML = `✅ GPX loaded: ${distanceKm.toFixed(2)} km, Elevation gain ${totalGain.toFixed(0)} m. Distance auto-updated.`;
         gpxFilenameDiv.innerText = `📄 ${fileName}`;
         renderAll();
         drawElevationChart(enriched);
@@ -510,15 +501,14 @@
         const canvas = document.getElementById('elevChart');
         if (!canvas) return;
         if (elevChartInstance) elevChartInstance.destroy();
-        if (!points || points.length < 2) {
-            // clear
-            return;
-        }
-        // sampel points untuk chart (maks 200 titik)
+        if (!points || points.length < 2) return;
+
+        // Sample points for performance (max 200 points)
         let step = Math.max(1, Math.floor(points.length / 200));
         let filtered = [];
-        for (let i = 0; i < points.length; i+=step) filtered.push(points[i]);
+        for (let i = 0; i < points.length; i += step) filtered.push(points[i]);
         if (filtered[filtered.length-1] !== points[points.length-1]) filtered.push(points[points.length-1]);
+
         const distances = filtered.map(p => (p.distM / 1000).toFixed(2));
         const elevations = filtered.map(p => p.elev);
         const ctx = canvas.getContext('2d');
@@ -527,7 +517,7 @@
             data: {
                 labels: distances,
                 datasets: [{
-                    label: 'Elevasi (m)',
+                    label: 'Elevation (m)',
                     data: elevations,
                     borderColor: '#2c6e9e',
                     backgroundColor: 'rgba(44,110,158,0.1)',
@@ -541,30 +531,26 @@
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
-                scales: { x: { title: { display: true, text: 'Jarak (km)', font: { size: 9 } } } }
+                scales: { x: { title: { display: true, text: 'Distance (km)', font: { size: 9 } } } }
             }
         });
     }
 
-    // event GPX upload
+    // GPX file handling
     function handleGPXFile(file) {
         if (!file || !file.name.endsWith('.gpx')) {
-            alert("Silakan pilih file .gpx");
+            alert("Please select a .gpx file");
             return;
         }
         const reader = new FileReader();
         reader.onload = function(e) {
-            const content = e.target.result;
-            parseGPX(content, file.name);
+            parseGPX(e.target.result, file.name);
         };
         reader.readAsText(file);
     }
 
-    // reset gpx (optional jika ingin hapus, tidak diimplement tapi bisa)
-    // event listeners
-    paceSlider.addEventListener('input', () => {
-        updatePaceFromSlider();
-    });
+    // Event listeners
+    paceSlider.addEventListener('input', updatePaceFromSlider);
     distPreset.addEventListener('change', () => {
         if (distPreset.value !== 'custom') {
             currentDistance = parseFloat(distPreset.value);
@@ -580,12 +566,11 @@
     });
     useElevCheck.addEventListener('change', () => renderAll());
 
-    // drop zone
+    // GPX drop zone
     gpxDropZone.addEventListener('click', () => gpxFileInput.click());
     gpxFileInput.addEventListener('change', (e) => {
         if (e.target.files.length) handleGPXFile(e.target.files[0]);
     });
-    // drag & drop
     gpxDropZone.addEventListener('dragover', (e) => { e.preventDefault(); gpxDropZone.style.opacity = '0.7'; });
     gpxDropZone.addEventListener('dragleave', () => { gpxDropZone.style.opacity = '1'; });
     gpxDropZone.addEventListener('drop', (e) => {
@@ -593,13 +578,14 @@
         gpxDropZone.style.opacity = '1';
         const file = e.dataTransfer.files[0];
         if (file && file.name.endsWith('.gpx')) handleGPXFile(file);
-        else alert("Harap drop file GPX");
+        else alert("Please drop a GPX file");
     });
 
-    // inisialisasi awal
+    // Initial render
     updateDistance();
     updatePaceFromSlider();
-    // reset chart dummy
+
+    // Empty chart placeholder
     if (!gpxData) {
         let ctx = document.getElementById('elevChart').getContext('2d');
         elevChartInstance = new Chart(ctx, { type: 'line', data: { datasets: [] }, options: { responsive: true } });
